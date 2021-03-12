@@ -1,12 +1,7 @@
 {
-  "name": "chrome-extension-boilerplate-react",
-  "version": "4.0.0",
-  "description": "A chrome extension boilerplate built with React 17 and Webpack 5",
+  "name": "ohlc2",
+  "version": "0.0.1",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lxieyang/chrome-extension-boilerplate-react.git"
-  },
   "scripts": {
     "build": "node utils/build.js",
     "start": "node utils/webserver.js",
@@ -17,9 +12,16 @@
     "@types/chrome": "0.0.132",
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.1",
+    "ansicolor": "^1.1.93",
+    "crx-hotreload": "^1.0.6",
+    "csvtojson": "^2.0.10",
+    "firebase": "^8.2.9",
+    "lodash": "^4.17.21",
+    "ololog": "^1.1.168",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-hot-loader": "^4.13.0"
+    "react-hot-loader": "^4.13.0",
+    "state-local": "^1.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.12.17",

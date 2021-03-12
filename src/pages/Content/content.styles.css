@@ -1,0 +1,210 @@
+.ohlc-root {
+  height: 100px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 12px;
+}
+
+.ohlc {
+  display: flex;
+}
+
+.toggle,
+.datapoint-name,
+.datapoint-value {
+  line-height: 1;
+}
+
+.timespan-toggles {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-right: 1px solid;
+  margin-right: 4px;
+}
+
+.timespan-toggle {
+  outline: none;
+  cursor: pointer;
+  font-weight: 400;
+  padding-left: 4px;
+  padding-right: 4px;
+  text-align: right;
+}
+
+.timespan-toggle.active {
+  position: relative;
+  font-weight: 900;
+}
+
+.timespan-toggle.active::before {
+  content: '•';
+  margin-right: 3px;
+  font-size: 16px;
+  position: absolute;
+  left: -4px;
+  line-height: 1;
+  top: -1px;
+}
+
+.timespan {
+  display: none;
+  height: 80px;
+  width: 105px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.timespan.active {
+  display: flex;
+}
+
+.datapoint {
+  display: flex;
+}
+
+.datapoint-name {
+  width: 50%;
+}
+
+.datapoint-values {
+  width: 50%;
+  text-align: right;
+  font-weight: 600;
+  position: relative;
+}
+
+.datapoint-value {
+  display: none;
+}
+
+.datapoint-value.active {
+  display: block;
+}
+
+.distance {
+  position: absolute;
+  left: 100%;
+  margin-left: 5px;
+  font-size: 9px;
+  top: 2px;
+}
+
+.distance.positive {
+  color: #47a447;
+}
+
+.distance.negative {
+  color: #d9534f;
+}
+
+/*
+ * Overrides
+ */
+
+@media screen and (min-width: 64em) {
+  .market-detail .market-contract-horizontal-v2 {
+    height: 100px !important;
+  }
+  .market-detail .market-contract-horizontal-v2__image {
+    width: 100px !important;
+  }
+  .market-detail .market-contract-horizontal-v2__content {
+    width: calc(100% - 100px) !important;
+  }
+  .market-detail .market-contract-horizontal-v2__row {
+    display: flex !important;
+    align-items: center !important;
+  }
+  .market-detail .market-detail__contracts-header {
+    padding-left: 110px !important;
+    padding-right: 25px !important;
+  }
+  .market-detail .market-detail__contracts-header-col-2 {
+    margin-left: 185px !important;
+  }
+  .market-detail .market-detail__contracts-header-col-3 {
+    margin-left: 215px !important;
+  }
+}
+
+/**
+ * Value formatters
+ */
+
+[data-description='significantly below'] {
+  color: #d9534f;
+}
+[data-description='well below'] {
+  color: #d9534f;
+}
+[data-description='below'] {
+  color: #d9534f;
+}
+[data-description='slightly below'] {
+  color: #d9534f;
+}
+[data-description='no change'] {
+  color: #000000;
+}
+[data-description='slightly above'] {
+  color: #47a447;
+}
+[data-description='above'] {
+  color: #47a447;
+}
+[data-description='well above'] {
+  color: #47a447;
+}
+[data-description='significantly above'] {
+  color: #47a447;
+}
+
+[data-description='very thin'] {
+  color: #000000;
+}
+[data-description='thin'] {
+  color: #000000;
+}
+[data-description='light'] {
+  color: #000000;
+}
+[data-descriptions='normal'] {
+  color: #000000;
+}
+[data-description='active'] {
+  color: #000000;
+}
+[data-description='very active'] {
+  color: #000000;
+}
+[data-description='significant'] {
+  color: #000000;
+}
+[data-description='heavy'] {
+  color: #000000;
+}
+[data-description='very heavy'] {
+  color: #000000;
+}
+
+/**
+ * B1, B2, B3, etc.
+ */
+
+body {
+  counter-reset: count;
+}
+
+.market-contract-horizontal-v2__title-container {
+  width: auto;
+}
+
+.market-contract-horizontal-v2__title-text {
+  counter-increment: count;
+}
+
+.market-contract-horizontal-v2__title-text::after {
+  content: ' (B' counter(count) ')';
+}

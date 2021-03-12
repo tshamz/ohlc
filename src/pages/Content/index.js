@@ -1,6 +1,16 @@
-import { printLine } from './modules/print';
+import { init, onMarketEnter, onMarketExit } from './modules/events';
 
-console.log('Content script works!');
-console.log('Must reload extension for modifications to take effect.');
+window.addEventListener('marketenter', onMarketEnter);
+window.addEventListener('marketexit', onMarketExit);
 
-printLine("Using the 'printLine' function from the Print Module");
+init();
+
+(function injectScript() {
+  const file = chrome.runtime.getURL('inject.js');
+  const th = document.getElementsByTagName('body')[0];
+  const s = document.createElement('script');
+
+  s.setAttribute('type', 'text/javascript');
+  s.setAttribute('src', file);
+  th.appendChild(s);
+})();
