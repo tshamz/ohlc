@@ -1,47 +1,96 @@
-import React from 'react';
+import React, { Profiler } from 'react';
 import { render } from 'react-dom';
 
-import { dom } from './utils';
-import log, { logError } from './log.js';
-import { OpenHighLowClose } from '../../../containers/OpenHighLowClose';
+import { $ } from '@shared/utils';
 
-export const mountReactApps = async (market) => {
-  console.log('market');
-  const apps = market?.contracts.map((contract, index) => {
-    const rowIndex = contract.displayOrder || index;
-    const id = `ohlc-react-root-${rowIndex}`;
-    const $row = dom.contractRows.item(rowIndex);
-    const hasContainer = document.getElementById(id);
+import { App } from '@components/App';
 
-    if (hasContainer) return;
+const containsClass = (nodes) => (classNames) => {
+  const nodeHasAllClassNames = (node) => {
+    return [classNames]
+      .flat()
+      .every((className) => node.classList.contains(className));
+  };
 
-    const $sibling = $row.children[1];
-    const $node = document.createElement('div');
-
-    $node.id = id;
-    $node.classList.add('ohlc-root');
-    $node.setAttribute('data-index', index);
-    $node.setAttribute('data-contract', contract.id);
-
-    $row.insertBefore($node, $sibling);
-
-    const app = render(
-      <OpenHighLowClose className="ohlc" market={market} contract={contract} />,
-      $node
-    );
-
-    return [app, $node];
-  });
-
-  return apps;
+  return nodes.some(nodeHasAllClassNames);
 };
 
-export const watchContractRows = async (market) => {
-  const observer = new MutationObserver((mutations) => {
-    if (market.contracts.length !== dom.ohlcContainers.length) {
-      mountReactApps(market);
-    }
-  });
+const getNodes = (mutations) => (type) => {
+  const nodes = mutations
+    .map((mutation) => Array.from(mutation[type]))
+    .flat()
+    .filter((node) => node.nodeType === 1);
 
-  observer.observe(dom.contractsContainer, { childList: true });
+  nodes.contains = containsClass(nodes);
+
+  return nodes;
+};
+
+export const watchForMarketReady = () => {
+  return new Promise((resolve) => {
+    const handler = async (mutations, observer) => {
+      if ($.contracts.length > 0) {
+        $.showMoreToggle && $.showMoreToggle.click();
+        observer.disconnect();
+        resolve();
+      }
+    };
+
+    const contractsObserver = new MutationObserver(handler);
+
+    contractsObserver.observe($.appRoot, { subtree: true, childList: true });
+  });
+};
+
+export const watchForAddedOrRemovedNodes = async () => {
+  const handler = (mutations) => {
+    const nodes = getNodes(mutations);
+    const addedNodes = nodes('addedNodes');
+    const removedNodes = nodes('removedNodes');
+
+    if (addedNodes.contains('market-contract-horizontal-v2')) {
+      mountApp();
+    }
+  };
+
+  const observer = new MutationObserver(handler);
+
+  observer.observe($.marketDetail, { childList: true, subtree: true });
+};
+
+export const mountApp = (data) => {
+  if (!$.ohlcAppRoot) {
+    const appEntry = document.createElement('div');
+    appEntry.setAttribute('id', 'ohlc-app-root');
+    document.body.appendChild(appEntry);
+  }
+
+  const callback = (
+    id,
+    phase,
+    actualDuration,
+    baseDuration,
+    startTime,
+    commitTime,
+    interactions
+  ) => {
+    // console.log({
+    //   id,
+    //   phase,
+    //   actualDuration,
+    //   baseDuration,
+    //   startTime,
+    //   commitTime,
+    //   interactions,
+    // });
+  };
+
+  render(
+    <>
+      <Profiler id="app" onRender={callback}>
+        <App {...data} />
+      </Profiler>
+    </>,
+    $.ohlcAppRoot
+  );
 };

@@ -1,12 +1,61 @@
-.ohlc-root {
+.market-detail__payout-header {
+  display: flex;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  justify-content: space-between;
+}
+
+.market-detail__payout-header::after {
+  content: 'Total Price';
+  display: block;
+  order: -1;
+  flex-basis: 25%;
+  text-align: center;
+}
+
+.market-detail__payout-header > *,
+.market-payout--market > * {
+  flex-basis: 25%;
+  text-align: center;
+  margin: 0 !important;
+}
+
+.market-header-title-large,
+.market-detail__payout-header,
+.market-payout--market,
+.market-detail__payout-header-col-1,
+.market-detail__payout-header-col-1-1,
+.market-payout__col-1,
+.market-payout__col-1-1 {
+  order: -1;
+}
+
+.market-payout--market::after {
+  content: '';
+  display: block;
+  order: -1;
+  flex-basis: 25%;
+}
+
+.market-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.ohlc-container-root {
   height: 100px;
   padding-top: 10px;
   padding-bottom: 10px;
   font-size: 12px;
 }
 
-.ohlc {
+.ohlc-container {
   display: flex;
+}
+
+.ohlc-timespan-container {
+  height: 80px;
+  width: 105px;
 }
 
 .toggle,
@@ -36,6 +85,12 @@
 .timespan-toggle.active {
   position: relative;
   font-weight: 900;
+}
+
+.timespan-toggle.disabled {
+  cursor: auto;
+  opacity: 0.3;
+  text-decoration: line-through;
 }
 
 .timespan-toggle.active::before {
@@ -102,7 +157,6 @@
 /*
  * Overrides
  */
-
 @media screen and (min-width: 64em) {
   .market-detail .market-contract-horizontal-v2 {
     height: 100px !important;
@@ -116,6 +170,15 @@
   .market-detail .market-contract-horizontal-v2__row {
     display: flex !important;
     align-items: center !important;
+  }
+  .market-detail .market-contract-horizontal-v2__row > *:first-child {
+    order: -1;
+  }
+  .market-detail .market-contract-horizontal-v2__row > *:nth-child(2) {
+    order: 1;
+  }
+  .market-detail .market-contract-horizontal-v2__row > *:last-child {
+    order: 0;
   }
   .market-detail .market-detail__contracts-header {
     padding-left: 110px !important;

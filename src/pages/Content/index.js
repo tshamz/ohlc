@@ -1,7 +1,4 @@
-import { init, onMarketEnter, onMarketExit } from './modules/events';
-
-window.addEventListener('marketenter', onMarketEnter);
-window.addEventListener('marketexit', onMarketExit);
+import { init } from './modules/events';
 
 init();
 

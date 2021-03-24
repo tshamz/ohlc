@@ -1,5 +1,10 @@
+import React, { createContext } from 'react';
 import firebase from 'firebase/app';
 import 'firebase/database';
+
+const FirebaseContext = createContext(null);
+
+export { FirebaseContext };
 
 export const app = firebase.initializeApp({
   apiKey: 'AIzaSyCsS6Um6Op2Ps6H8fuoWklX1WMB5-hUhq4',
@@ -38,4 +43,25 @@ export const fetchPathOnce = (path, database = db.app) => {
 
 export const fetchPath = (path, database = db.app) => {
   return database.ref(path);
+};
+
+export const subscribeToPriceUpdates = (handler) => {
+  const pricesRef = fetchPath(`prices`);
+
+  return [
+    pricesRef.on('child_added', handler),
+    pricesRef.on('child_changed', handler),
+  ];
+};
+
+export const subscribeToTimespanUpdates = (handler) => {
+  return fetchPath('/', db.timespans).on('value', handler);
+};
+
+export const FirebaseContextProvider = ({ children }) => {
+  return (
+    <FirebaseContext.Provider value={{ app, db }}>
+      {children}
+    </FirebaseContext.Provider>
+  );
 };

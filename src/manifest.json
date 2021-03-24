@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "ohlc2",
-  "description": "💸",
+  "name": "📈 OHLC",
+  "description": "",
   "options_page": "options.html",
   "background": {
     "service_worker": "background.bundle.js"
@@ -9,6 +9,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.predictit.org/*"],
+      "run_at": "document_idle",
       "js": ["contentScript.bundle.js"],
       "css": ["content.styles.css"]
     }
@@ -16,31 +17,33 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "inject.js",
+        "contentScript.bundle.js",
+        "contentScript.bundle.js.map",
         "content.styles.css",
         "icon-128.png",
         "icon-34.png",
-        "chrome-extension://kpbkdojlmgnjcgdmjgdnfgdnmkcdgplo/inject.js",
-        "kpbkdojlmgnjcgdmjgdnfgdnmkcdgplo/inject.js",
-        "*/inject.js",
-        "inject.js",
-        "./chrome-extension://kpbkdojlmgnjcgdmjgdnfgdnmkcdgplo/inject.js",
-        "./kpbkdojlmgnjcgdmjgdnfgdnmkcdgplo/inject.js",
-        "./*/inject.js",
-        "./inject.js",
-        "index.js",
-        "./src/pages/Content/index.js"
+        "*.map"
       ],
       "extension_ids": ["kpbkdojlmgnjcgdmjgdnfgdnmkcdgplo"],
-      "matches": ["https://www.predictit.org/*"]
+      "matches": ["<all_urls>"]
     }
   ],
   "permissions": [
+    "webRequest",
+    "declarativeNetRequest",
     "unlimitedStorage",
     "storage",
     "alarms",
     "history",
     "idle",
     "notifications",
-    "scripting"
-  ]
+    "scripting",
+    "webNavigation"
+  ],
+  "content_security_policy": {
+    "script-src": "self",
+    "object-src": "self"
+  },
+  "host_permissions": ["https://*.predictit.org/*", "wss://*.predictit.org/*"]
 }

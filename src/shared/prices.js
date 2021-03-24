@@ -7,7 +7,7 @@ const formatCents = (amount) => round(amount * 100, 2).toFixed(2);
 const getPrices = (key) => (row) => row[key];
 const getTotal = (key) => (sum, row) => sum + row[key];
 
-export const calculateTimespansPrices = (timespans) => {
+export const calculatePrices = (timespans) => {
   return Object.entries(timespans).reduce((timespanPrices, [key, values]) => {
     const open = values.reduce(getTotal('open'), 0) / values.length;
     const high = values.map(getPrices('high')).sort()[values.length - 1];

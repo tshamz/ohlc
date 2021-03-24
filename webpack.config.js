@@ -11,7 +11,8 @@ const ASSET_PATH = process.env.ASSET_PATH || '/';
 
 var alias = {
   'react-dom': '@hot-loader/react-dom',
-  shared: path.resolve(__dirname, 'src/shared/'),
+  '@components': path.resolve(__dirname, 'src/components/'),
+  '@shared': path.resolve(__dirname, 'src/shared/'),
 };
 
 // load the secrets
@@ -183,7 +184,7 @@ var options = {
 };
 
 if (env.NODE_ENV === 'development') {
-  options.devtool = 'cheap-module-source-map';
+  options.devtool = 'inline-source-map';
 } else {
   options.optimization = {
     minimize: true,
