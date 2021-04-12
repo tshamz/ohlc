@@ -22,57 +22,38 @@ export const calculatePrices = (timespans) => {
         open: {
           value: open,
           label: formatCents(open),
-          distance: ({ lastTrade }) => {
-            if (!open) return null;
-            const value = round((lastTrade - open) * 100, 2);
-            const direction = value === 0 ? '' : value > 0 ? '+' : '-';
-            const label = Math.abs(value).toFixed(1);
-            return { label, direction };
-          },
         },
         high: {
           value: high,
           label: formatCents(high),
-          distance: ({ lastTrade }) => {
-            if (!high) return null;
-            const value = round((lastTrade - high) * 100, 2);
-            const direction = value === 0 ? '' : value > 0 ? '+' : '-';
-            const label = Math.abs(value).toFixed(1);
-            return { label, direction };
-          },
         },
         low: {
           value: low,
           label: formatCents(low),
-          distance: ({ lastTrade }) => {
-            if (!low) return null;
-            const value = round((lastTrade - low) * 100, 2);
-            const direction = value === 0 ? '' : value > 0 ? '+' : '-';
-            const label = Math.abs(value).toFixed(1);
-            return { label, direction };
-          },
         },
         close: {
           value: close,
           label: formatCents(close),
-          distance: ({ lastTrade }) => {
-            if (!close) return null;
-            const value = round((lastTrade - close) * 100, 2);
-            const direction = value === 0 ? '' : value > 0 ? '+' : '-';
-            const label = Math.abs(value).toFixed(1);
-            return { label, direction };
-          },
         },
         volume: {
           value: volume,
           label: (volume / 1000).toFixed(2) + `K`,
-          distance: ({ market }) => {
-            const percentage = (volume / market.totalSharesTraded) * 100;
-            const label = percentage.toFixed(2) + '%';
-            return { label, direction: '' };
-          },
         },
       },
     };
   }, {});
+};
+
+export const calculatePriceDistance = (price, { lastTrade, buyYes }) => {
+  if (!price) return 'N/A';
+  const value = round(((lastTrade || buyYes) - price) * 100, 2);
+  const direction = value === 0 ? '' : value > 0 ? '+' : '-';
+  const label = Math.abs(value).toFixed(1);
+  return { label, direction };
+};
+
+export const calculateVolumeDistance = (volume, totalSharesTraded) => {
+  const percentage = (volume / totalSharesTraded) * 100;
+  const label = percentage.toFixed(2) + '%';
+  return { label, direction: '' };
 };

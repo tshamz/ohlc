@@ -1,76 +1,69 @@
-import { keyBy } from 'lodash';
-import { getBucket } from '@extend-chrome/storage';
+import chalk from 'chalk';
+import diffler from 'diffler';
+import { storage, getBucket } from '@extend-chrome/storage';
 
-const getOne = (bucket) => {
-  return (key) => bucket.get(key.toString()).then((data) => data[key] || {});
+export const sync = storage.sync;
+export const local = storage.local;
+
+export const active = getBucket('active');
+export const lastRan = getBucket('lastRan');
+
+export const markets = getBucket('markets');
+export const contracts = getBucket('contracts');
+export const prices = getBucket('prices');
+export const timespans = getBucket('timespans');
+
+markets.name = 'markets';
+contracts.name = 'contracts';
+prices.name = 'prices';
+timespans.name = 'timespans';
+
+markets.changeStream.subscribe((changes) => {
+  // console.log(`markets changes`, changes);
+});
+
+contracts.changeStream.subscribe((changes) => {
+  // console.log(`contracts changes`, changes);
+});
+
+active.changeStream.subscribe((changes) => {
+  // console.log(`active changes`, changes);
+});
+
+const logChanges = (title) => (changes) => {
+  setTimeout(() => {
+    console.groupCollapsed(chalk.black.bold(title));
+
+    Object.entries(changes).forEach(([key, value], index) => {
+      const { oldValue = {}, newValue = {} } = value;
+
+      index === 0
+        ? console.group(chalk.black.bold(key))
+        : console.groupCollapsed(chalk.black.bold(key));
+
+      console.table(diffler(oldValue, newValue));
+
+      console.groupEnd();
+    });
+
+    console.groupEnd();
+  }, 2500);
 };
 
-const setOne = (bucket) => {
-  return (update) => bucket.set({ [update.id]: update });
-};
+// setTimeout(() => {
+//   console.groupCollapsed(chalk.black.bold('changes:markets'));
 
-const getAll = (bucket) => {
-  return () => bucket.get();
-};
+//   Object.entries(changes).forEach(([key, value], index) => {
+//     const { oldValue = {}, newValue = {} } = value;
 
-const setMany = (bucket) => {
-  return (updates) =>
-    Array.isArray(updates)
-      ? bucket.set(keyBy(updates, 'id'))
-      : bucket.set(updates);
-};
+//     index === 0
+//       ? console.group(chalk.black.bold(key))
+//       : console.groupCollapsed(chalk.black.bold(key));
 
-export const marketsBucket = getBucket('markets');
-export const getMarket = getOne(marketsBucket);
-export const setMarket = setOne(marketsBucket);
-export const getMarkets = getAll(marketsBucket);
-export const setMarkets = setMany(marketsBucket);
-export const marketChanges = marketsBucket.changeStream;
+//     console.table(diffler(oldValue, newValue));
 
-export const positionsBucket = getBucket('positions');
-export const getPosition = getOne(positionsBucket);
-export const setPosition = setOne(positionsBucket);
-export const getPositions = getAll(positionsBucket);
-export const setPositions = setMany(positionsBucket);
-export const positionChanges = positionsBucket.changeStream;
+//     console.groupEnd();
+//   });
 
-export const pricesBucket = getBucket('prices');
-export const getPrice = getOne(pricesBucket);
-// export const setPrice = setOne(pricesBucket);
-export const getPrices = getAll(pricesBucket);
-export const setPrices = setMany(pricesBucket);
-export const priceChanges = pricesBucket.changeStream;
-
-export const timespansBucket = getBucket('timespans');
-export const getTimespan = getOne(timespansBucket);
-export const setTimespan = setOne(timespansBucket);
-export const getTimespans = getAll(timespansBucket);
-export const setTimespans = setMany(timespansBucket);
-export const timespanChanges = timespansBucket.changeStream;
-
-export const setPrice = (update) => {
-  const market = update.market;
-  const contract = update.id;
-  const marketContractPrices = getPrice(market);
-
-  setPrices({
-    [market]: {
-      ...marketContractPrices,
-      [contract]: update,
-    },
-  });
-};
-
-export const buckets = {
-  markets: marketsBucket,
-  positions: positionsBucket,
-  prices: pricesBucket,
-  timespans: timespansBucket,
-};
-
-export const changes = {
-  markets: marketChanges,
-  positions: positionChanges,
-  prices: priceChanges,
-  timespans: timespanChanges,
-};
+//   console.groupEnd();
+// }, 2500);

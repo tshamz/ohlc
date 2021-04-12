@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-export const Portal = memo(({ id, classes, parent, children }) => {
+export const Portal = memo(({ id = Date.now(), classes, parent, children }) => {
   const el = document.getElementById(id) || document.createElement('div');
   const container = useRef(el);
 

@@ -1,7 +1,7 @@
 (function historyEvents() {
-  const dispatchMarketEvents = (current, previous, browserEvent) => {
-    const enteringMarket = current.includes('markets/detail');
-    const exitingMarket = previous.includes('markets/detail');
+  const dispatchMarketEvents = ({ current, previous, browserEvent }) => {
+    const enteringMarket = current && current.includes('markets/detail');
+    const exitingMarket = previous && previous.includes('markets/detail');
 
     if (exitingMarket) {
       const id = previous.replace(/.*\/detail\/(\d\d\d\d\d?)\/?.*/, '$1');
@@ -15,15 +15,23 @@
       window.dispatchEvent(event);
     }
 
-    window.dispatchEvent(new Event(browserEvent));
+    if (browserEvent) {
+      window.dispatchEvent(new Event(browserEvent));
+    }
   };
+
+  window.addEventListener('load', (event) => {
+    if (window.location.pathname.includes(`detail/`)) {
+      dispatchMarketEvents({ current: window.location.pathname });
+    }
+  });
 
   window.history.pushState = ((fn) => {
     return function pushState() {
       const previous = `${window.location.pathname}`;
       const _return = fn.apply(this, arguments);
       const current = `${window.location.pathname}`;
-      dispatchMarketEvents(current, previous, 'pushstate');
+      dispatchMarketEvents({ current, previous, browserEvent: 'pushstate' });
       return _return;
     };
   })(window.history.pushState);
@@ -33,7 +41,7 @@
       const previous = `${window.location.pathname}`;
       const _return = fn.apply(this, arguments);
       const current = `${window.location.pathname}`;
-      dispatchMarketEvents(current, previous, 'replacestate');
+      dispatchMarketEvents({ current, previous, browserEvent: 'replacestate' });
       return _return;
     };
   })(window.history.replaceState);

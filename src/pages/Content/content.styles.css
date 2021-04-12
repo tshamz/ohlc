@@ -30,11 +30,19 @@
   order: -1;
 }
 
+.market-detail__payout-header ~ .market-detail__payout-header.ohlc,
+.market-payout ~ .market-payout.ohlc {
+  display: none;
+}
+
 .market-payout--market::after {
-  content: '';
+  content: '$' attr(data-total-price);
   display: block;
   order: -1;
   flex-basis: 25%;
+  color: #263b3f;
+  font-size: 30px;
+  font-weight: 300;
 }
 
 .market-detail {
@@ -73,6 +81,14 @@
   margin-right: 4px;
 }
 
+.is-active--1h .is-1h-toggle,
+.is-active--24h .is-24h-toggle,
+.is-active--7d .is-7d-toggle,
+.is-active--30d .is-30d-toggle,
+.is-active--90d .is-90d-toggle {
+  font-weight: 900;
+}
+
 .timespan-toggle {
   outline: none;
   cursor: pointer;
@@ -82,12 +98,7 @@
   text-align: right;
 }
 
-.timespan-toggle.active {
-  position: relative;
-  font-weight: 900;
-}
-
-.timespan-toggle.disabled {
+.timespan-toggle.is-disabled--true {
   cursor: auto;
   opacity: 0.3;
   text-decoration: line-through;
@@ -111,7 +122,11 @@
   justify-content: space-between;
 }
 
-.timespan.active {
+.is-active--1h .is-1h,
+.is-active--24h .is-24h,
+.is-active--7d .is-7d,
+.is-active--30d .is-30d,
+.is-active--90d .is-90d {
   display: flex;
 }
 
@@ -134,25 +149,26 @@
   display: none;
 }
 
-.datapoint-value.active {
+.datapoint-values.is-active--value .is-value,
+.datapoint-values.is-active--distance .is-distance {
   display: block;
 }
 
-.distance {
+/* .distance {
   position: absolute;
   left: 100%;
   margin-left: 5px;
   font-size: 9px;
   top: 2px;
-}
+} */
 
-.distance.positive {
+/* .distance.positive {
   color: #47a447;
-}
+} */
 
-.distance.negative {
+/* .distance.negative {
   color: #d9534f;
-}
+} */
 
 /*
  * Overrides

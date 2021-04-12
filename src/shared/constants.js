@@ -3,6 +3,15 @@ export const PREDICTIT_DOT_ORG = `https://www.predictit.org`;
 
 export const TIMESPANS = ['1h', '24h', '7d', '30d', '90d'];
 
+/* EVENTS */
+export const MARKET_ENTER = 'market.enter';
+export const MARKET_EXIT = 'market.exit';
+export const MARKET_READY = 'market.ready';
+export const POSITION_CHANGE = 'position.change';
+export const MARKETS_UPDATE_INTERVAL = 'alarm.markets.update';
+export const CONTRACTS_UPDATED_INTERVAL = 'alarm.contracts.update';
+
+/* KEYS */
 export const MARKET_KEYS = [
   'id',
   'active',
@@ -91,4 +100,12 @@ export const KEY_MAP = {
   userOpenOrdersSellQuantity: 'openSellOrders',
   userPrediction: 'prediction',
   userQuantity: 'quantity',
+};
+
+export const KEYS = {
+  MARKET_KEYS,
+  CONTRACT_KEYS,
+  PRICE_KEYS,
+  CONTRACT_POSITION_KEYS,
+  KEY_MAP,
 };

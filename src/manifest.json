@@ -3,6 +3,10 @@
   "name": "📈 OHLC",
   "description": "",
   "options_page": "options.html",
+  "icons": {
+    "34": "icon-34.png",
+    "128": "icon-128.png"
+  },
   "background": {
     "service_worker": "background.bundle.js"
   },

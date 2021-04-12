@@ -39,9 +39,4 @@ export const log = ololog
     },
   });
 
-export const logError = (error) => {
-  log.bright.red(error);
-  throw error;
-};
-
 export default log;

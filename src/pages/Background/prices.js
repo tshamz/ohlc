@@ -1,34 +1,57 @@
-import { keyBy, groupBy, mapValues } from 'lodash';
+import * as messages from '@shared/messages';
+import { pricesRef } from '@shared/firebase';
+import { markets, active, prices } from '@shared/storage';
 
-import { setPrice, setPrices } from '@shared/storage';
-import { fetchPathOnce, subscribeToPriceUpdates } from '@shared/firebase';
+import { fetchPricesFromPredictit as fetchPrices } from '@shared/fetch';
 
-(async () => {
-  try {
-    const keyByContract = (contracts) => keyBy(contracts, 'id');
-    const groupByMarket = (prices) => groupBy(prices, 'market');
+const updateActivePrices = (snapshot) => {
+  return active.set({
+    prices: snapshot.val(),
+  });
+};
 
-    const groupByMarketAndContract = (prices) =>
-      mapValues(groupByMarket(prices), keyByContract);
+const onMarketEnter = async ([{ marketId }]) => {
+  pricesRef
+    .orderByChild('market')
+    .equalTo(marketId)
+    .once('value')
+    .then((snapshot) => snapshot.val())
+    .then((prices) => active.set({ prices }));
 
-    await fetchPathOnce(`prices`)
-      .then(groupByMarketAndContract)
-      .then(setPrices);
+  pricesRef
+    .orderByChild('market')
+    .equalTo(marketId)
+    .on('child_changed', updateActivePrices);
+};
 
-    const onPriceChange = (snapshot) => {
-      return setPrice(snapshot.val());
-    };
+// const onMarketEnter = async ([{ marketId }]) => {
+//   const contractIds = await markets
+//     .get(marketId)
+//     .then((result) => result[marketId]?.contracts || []);
+//   console.log('contractIds', contractIds);
 
-    subscribeToPriceUpdates(onPriceChange);
-  } catch (error) {
-    console.error(error);
-  }
-})();
+//   const fromStorage = await prices.get(contractIds);
 
-// await fetchPathOnce(`prices`).then(setPrices);
+//   const getPrices = Object.keys(fromStorage).length
+//     ? prices.get(contractIds)
+//     : fetchPrices(marketId);
 
-// const onPriceChange = (snapshot) => {
-//   return setPrice(snapshot.val());
+//   await getPrices.then((prices) => active.set({ prices }));
+
+//   return pricesRef
+//     .orderByChild('market')
+//     .equalTo(marketId)
+//     .on('child_changed', updateActivePrices);
 // };
 
-// subscribeToPriceUpdates(onPriceChange);
+const onMarketExit = async () => {
+  await active.remove('prices');
+  pricesRef.off('child_changed', updateActivePrices);
+};
+
+try {
+  messages.marketEnterStream.subscribe(onMarketEnter);
+  messages.marketExitStream.subscribe(onMarketExit);
+} catch (error) {
+  console.error('error', error);
+}

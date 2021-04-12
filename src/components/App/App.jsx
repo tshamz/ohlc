@@ -2,88 +2,81 @@ import React, { useState, useEffect } from 'react';
 
 import { Portal } from '@components/Portal';
 import { PayoutHeader } from '@components/PayoutHeader';
+import { useTotalPrice } from '@components/useTotalPrice';
 import { OpenHighLowClose } from '@components/OpenHighLowClose';
 
 import { $ } from '@shared/utils';
-import { changes } from '@shared/storage';
+// import * as storage from '@shared/storage';
 
 export const App = (props) => {
-  const [market, setMarket] = useState(props.market);
-  const [contracts, setContracts] = useState(props.contracts);
-  const [positions, setPositions] = useState(props.positions);
-  const [prices, setPrices] = useState(props.prices);
-  const [timespans, setTimespans] = useState(props.timespans);
-  const state = { market, contracts, positions, prices, timespans };
+  const [state, setState] = useState(props);
+  const [allActiveTimespans, setAllActiveTimespans] = useState('24h');
 
-  console.log('state', state);
+  useTotalPrice(state.prices);
 
   useEffect(() => {
-    window.addEventListener('market.exit', () => {
-      setMarket(null);
-      setContracts(null);
-      setPositions(null);
-      setPrices(null);
-      setTimespans(null);
-    });
-  }, []);
+    if (!state.market) return;
 
-  useEffect(() => {
-    const id = market?.id;
+    const id = state.market.id;
 
-    const onMarketsChange = (changes) => {
-      if (!changes[id]) return;
-      const { contracts, prices, ...market } = changes[id].newValue;
+    // const marketsRef = storage.markets.changes.subscribe((changes) => {
+    //   if (!changes[id]) return;
 
-      console.log('updating market', market);
-      setMarket(market);
+    //   const { contracts, prices, ...market } = changes[id].newValue;
 
-      console.log('updating contracts', contracts);
-      setContracts(contracts);
+    //   setState({
+    //     ...state,
+    //     contracts,
+    //     prices,
+    //     market: { ...state.market, ...market },
+    //   });
+    // });
 
-      console.log('updating prices (market)', prices);
-      setPrices(prices);
-    };
+    // const positionsRef = storage.positions.changes.subscribe((changes) => {
+    //   if (!changes[id]) return;
+    //   setState({ ...state, positions: changes[id].newValue.contracts });
+    // });
 
-    const onPositionsChange = (changes) => {
-      if (!changes[id]) return;
-      console.log('updating positions', changes[id].newValue);
-      setPositions(changes[id].newValue.contracts);
-    };
+    // prettier-ignore
+    // const pricesRef = storage.prices.changes.subscribe((changes) => {
+    //   const contractIds = Object.keys(state.contracts);
+    //   const activeChanges = contractIds
+    //     .reduce((updates, id) => ({ ...updates, ...changes[id]?.newValue }), {})
+    //   if (!Object.keys(activeChanges).length) return;
+    //   setState({ ...state, prices: { ...state.prices, ...activeChanges } });
+    // });
 
-    const onPricesChange = (changes) => {
-      if (!changes[id]) return;
-      console.log('updating prices', changes[id].newValue);
-      setPrices(changes[id].newValue);
-    };
-
-    const onTimespansChange = (changes) => {
-      if (!changes[id]) return;
-      console.log('updating timespans', changes[id].newValue);
-      setTimespans(changes[id].newValue);
-    };
-
-    const marketsRef = changes.markets.subscribe(onMarketsChange);
-    const positionsRef = changes.positions.subscribe(onPositionsChange);
-    const pricesRef = changes.prices.subscribe(onPricesChange);
-    const timespansRef = changes.timespans.subscribe(onTimespansChange);
+    // const timespansRef = storage.timespans.changes.subscribe((changes) => {
+    //   if (!changes[id]) return;
+    //   setState({ ...state, timespans: changes[id].newValue.contracts });
+    // });
 
     return () => {
-      marketsRef.unsubscribe();
-      positionsRef.unsubscribe();
-      pricesRef.unsubscribe();
-      timespansRef.unsubscribe();
+      // marketsRef.unsubscribe();
+      // positionsRef.unsubscribe();
+      // pricesRef.unsubscribe();
+      // timespansRef.unsubscribe();
     };
-  }, [market]);
+  }, [state]);
 
-  if (!market || !contracts || !positions || !timespans) return null;
+  useEffect(() => {
+    setState(props);
+  }, [props]);
+
+  const ready =
+    !!state.market &&
+    !!state.contracts &&
+    !!state.positions &&
+    !!state.timespans &&
+    !!state.prices;
+
+  if (!ready) return null;
 
   return (
     <>
-      {market && positions && Object.keys(positions).length === 0 && (
-        <PayoutHeader id={market.id} prices={prices} />
-      )}
+      <PayoutHeader market={state.market} />
 
-      {Object.values(contracts)
+      {Object.values(state.contracts)
         .sort((a, b) => a.displayOrder - b.displayOrder)
         .map((contract, index) => {
           return (
@@ -93,7 +86,13 @@ export const App = (props) => {
               classes={['ohlc-container-root']}
               parent={$.contractRows.item(contract.displayOrder || index)}
             >
-              <OpenHighLowClose timespans={timespans[contract.id]} />
+              <OpenHighLowClose
+                prices={state.prices[contract.id]}
+                timespans={state.timespans[contract.id]}
+                totalSharesTraded={state.market.totalSharesTraded}
+                allActiveTimespans={allActiveTimespans}
+                setAllActiveTimespans={setAllActiveTimespans}
+              />
             </Portal>
           );
         })}

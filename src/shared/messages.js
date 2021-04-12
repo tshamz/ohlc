@@ -1,7 +1,14 @@
 import { getMessage } from '@extend-chrome/messages';
 
 export const [
-  sendLocalStorage,
-  localStorageStream,
-  waitForLocalStorage,
-] = getMessage('LOCAL_STORAGE');
+  marketEnterSend,
+  marketEnterStream,
+  marketEnterReady,
+] = getMessage('MARKET_ENTER');
+
+// prettier-ignore
+export const [
+  marketExitSend,
+  marketExitStream,
+  marketExitReady,
+] = getMessage('MARKET_EXIT');

@@ -18,13 +18,6 @@ export const isExpired = (item = {}) => {
   return Date.now() > item?._expires;
 };
 
-export const toStorage = (key, update) => {
-  chrome.storage.local.get(key, (data) => {
-    chrome.storage.local.set({ [key]: { ...data[key], ...update } });
-  });
-  return update;
-};
-
 export const expires = {
   get minute() {
     return Date.now() + 1000 * 60;
@@ -63,24 +56,12 @@ export const $ = {
     return document.querySelector('.market-detail__payout-header');
   },
 
-  get payoutHeader_() {
-    return document.getElementsByClassName('market-detail__payout-header');
-  },
-
   get marketPayout() {
-    return document.querySelector('.market-payout');
-  },
-
-  get marketPayout_() {
-    return document.getElementsByClassName('market-payout');
+    return document.querySelector('.market-payout--market');
   },
 
   get marketDetail() {
     return document.querySelector('.market-detail');
-  },
-
-  get marketDetail_() {
-    return document.getElementsByClassName('market-detail');
   },
 
   get contractsContainer() {

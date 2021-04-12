@@ -1,9 +1,10 @@
-import React, { Profiler } from 'react';
+import React from 'react';
 import { render } from 'react-dom';
 
-import { $ } from '@shared/utils';
-
 import { App } from '@components/App';
+
+import { $ } from '@shared/utils';
+import { fetchMarketData } from '@shared/fetch';
 
 const containsClass = (nodes) => (classNames) => {
   const nodeHasAllClassNames = (node) => {
@@ -51,46 +52,34 @@ export const watchForAddedOrRemovedNodes = async () => {
     if (addedNodes.contains('market-contract-horizontal-v2')) {
       mountApp();
     }
+
+    if (addedNodes.contains('market-payout--market')) {
+      window.dispatchEvent(new CustomEvent('payoutNode.added'));
+    }
   };
 
-  const observer = new MutationObserver(handler);
+  if (!$.marketDetail) {
+    setTimeout(watchForAddedOrRemovedNodes, 5000);
+  } else {
+    const observer = new MutationObserver(handler);
 
-  observer.observe($.marketDetail, { childList: true, subtree: true });
+    observer.observe($.marketDetail, { childList: true, subtree: true });
+  }
 };
 
-export const mountApp = (data) => {
+export const mountApp = async () => {
+  const path = window.location.pathname;
+  const id = path.match(/detail\/(?<id>\d\d\d\d\d?)/)?.groups.id;
+
+  if (!id) return;
+
+  // const data = await fetchMarketData(id);
+
   if (!$.ohlcAppRoot) {
     const appEntry = document.createElement('div');
     appEntry.setAttribute('id', 'ohlc-app-root');
     document.body.appendChild(appEntry);
   }
 
-  const callback = (
-    id,
-    phase,
-    actualDuration,
-    baseDuration,
-    startTime,
-    commitTime,
-    interactions
-  ) => {
-    // console.log({
-    //   id,
-    //   phase,
-    //   actualDuration,
-    //   baseDuration,
-    //   startTime,
-    //   commitTime,
-    //   interactions,
-    // });
-  };
-
-  render(
-    <>
-      <Profiler id="app" onRender={callback}>
-        <App {...data} />
-      </Profiler>
-    </>,
-    $.ohlcAppRoot
-  );
+  render(<App />, $.ohlcAppRoot);
 };

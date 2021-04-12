@@ -1,5 +1,7 @@
-import './prices';
+import './alarms';
 import './markets';
-import './timespans';
+import './contracts';
+import './prices';
+// import './timespans';
 // import './positions';
 // import './navigation';

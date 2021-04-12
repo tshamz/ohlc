@@ -1,52 +1,70 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { debounce } from 'lodash';
 
 import { TIMESPANS } from '@shared/constants';
+import {
+  calculatePriceDistance,
+  calculateVolumeDistance,
+} from '@shared/prices';
 
-export const OpenHighLowClose = ({ timespans = {} }) => {
-  const [active, setActive] = useState(TIMESPANS[1]);
+export const OpenHighLowClose = ({
+  prices,
+  timespans,
+  totalSharesTraded,
+  allActiveTimespans,
+  setAllActiveTimespans,
+}) => {
+  const [allActiveValue, setAllActiveValue] = useState('value');
+  const [activeTimespan, setActiveTimespan] = useState(allActiveTimespans);
+  const [debounceClickEvents, setDebounceClickEvents] = useState([]);
 
-  const toggleLabelValue = (target) => {
-    target.classList.remove('active');
-    target.nextElementSibling?.classList.add('active');
-    target.previousElementSibling?.classList.add('active');
+  useEffect(() => {
+    setActiveTimespan(allActiveTimespans);
+  }, [allActiveTimespans]);
+
+  const onDoubleClicked = (timespan) => (event) => {
+    event.stopPropagation();
+    if (debounceClickEvents.length > 0) {
+      debounceClickEvents.forEach((debounce) => debounce.cancel());
+      setDebounceClickEvents([]);
+    }
+    setAllActiveTimespans(timespan);
   };
 
-  const toggleAllTimespanLabelValues = (timespan, target) => {
-    const $ = target.closest('.ohlc');
-    const $timespan = $.querySelector(`[data-timespans="${timespan}"]`);
-    const $values = Array.from($timespan.querySelectorAll(`[data-value]`));
-    const match = $values.find((value) => value.classList.contains('active'));
-    const type = match.dataset.value;
-    const actives = $values.filter((value) => value.dataset.value !== type);
-    $values.forEach((value) => value.classList.remove('active'));
-    actives.forEach((value) => value.classList.add('active'));
-  };
+  const onClicked = (timespan) => (event) => {
+    event.stopPropagation();
+    const callback = debounce(() => {
+      setDebounceClickEvents([]);
 
-  const toggleTimespan = (timespan, event) => {
-    if (active === timespan) {
-      toggleAllTimespanLabelValues(timespan, event.target);
-    }
+      if (!(timespan in timespans)) return;
 
-    if (timespans[timespan]) {
-      setActive(timespan);
-    }
+      if (timespan !== activeTimespan) {
+        setActiveTimespan(timespan);
+        return;
+      }
+
+      if (allActiveValue === 'value') {
+        setAllActiveValue('distance');
+      } else {
+        setAllActiveValue('value');
+      }
+    }, 150);
+    setDebounceClickEvents([...debounceClickEvents, callback]);
+    callback();
   };
 
   return (
-    <div className="ohlc-container">
+    <div className={`ohlc-container is-active--${activeTimespan}`}>
       <div data-toggles className="timespan-toggles">
         {TIMESPANS.map((label) => {
-          const isActive = label === active ? 'active' : '';
-          const isDisabled = !(label in timespans) ? 'disabled' : '';
           return (
             <button
               key={label}
               data-toggle={label}
-              className={`timespan-toggle ${isActive} ${isDisabled}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                toggleTimespan(label, event);
-              }}
+              // prettier-ignore
+              className={`timespan-toggle is-${label}-toggle is-disabled--${!timespans[label]}`}
+              onClick={onClicked(label)}
+              onDoubleClick={onDoubleClicked(label)}
             >
               {label}
             </button>
@@ -54,49 +72,78 @@ export const OpenHighLowClose = ({ timespans = {} }) => {
         })}
       </div>
 
-      <div data-timespans="" className="ohlc-timespan-container">
+      <div className="ohlc-timespan-container">
         {Object.entries(timespans).map(([timespan, datapoints]) => {
-          const isActive = timespan === active ? 'active' : '';
           return (
             <div
               key={timespan}
               data-timespans={timespan}
-              className={`timespan ${isActive}`}
+              className={`timespan is-${timespan}`}
             >
-              {Object.entries(datapoints).map(([name, { label, distance }]) => {
-                return (
-                  <div key={name} className="datapoint" data-datapoint={name}>
-                    <div className="datapoint-name">{`${name}: `}</div>
-                    <div className="datapoint-values">
-                      <div
-                        data-value="raw"
-                        className="datapoint-value active"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          toggleLabelValue(event.target);
-                        }}
-                      >
-                        {label || '-'}
-                      </div>
-
-                      <div
-                        data-value="change"
-                        className={`datapoint-value`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          toggleLabelValue(event.target);
-                        }}
-                      >
-                        {distance?.direction}
-                        {distance?.label}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {Object.entries(datapoints).map(([name, { value, label }]) => (
+                <OpenHighLowCloseValue
+                  key={name}
+                  name={name}
+                  label={label}
+                  value={value}
+                  prices={prices}
+                  allActiveValue={allActiveValue}
+                  totalSharesTraded={totalSharesTraded}
+                />
+              ))}
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+export const OpenHighLowCloseValue = ({
+  name,
+  label,
+  value,
+  prices,
+  allActiveValue,
+  totalSharesTraded,
+}) => {
+  const [activeValue, setActiveValue] = useState(allActiveValue);
+
+  useEffect(() => {
+    setActiveValue(allActiveValue);
+  }, [allActiveValue]);
+
+  const distance =
+    name === 'volume'
+      ? calculateVolumeDistance(value, totalSharesTraded)
+      : calculatePriceDistance(value, prices);
+
+  return (
+    <div key={name} className="datapoint" data-datapoint={name}>
+      <div className="datapoint-name">{`${name}: `}</div>
+      <div className={`datapoint-values is-active--${activeValue}`}>
+        <div
+          data-value="raw"
+          className={`datapoint-value is-value`}
+          onClick={(event) => {
+            event.stopPropagation();
+            setActiveValue('distance');
+          }}
+        >
+          {label || '-'}
+        </div>
+
+        <div
+          data-value="distance"
+          className={`datapoint-value is-distance`}
+          onClick={(event) => {
+            event.stopPropagation();
+            setActiveValue('value');
+          }}
+        >
+          {distance?.direction}
+          {distance?.label}
+        </div>
       </div>
     </div>
   );
