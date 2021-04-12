@@ -28,61 +28,6 @@ const fetchPredictitMarket = async (marketId) => {
   return update;
 };
 
-export const fetchMarketFromPredictit = async (marketId) => {
-  const market = await fetchPredictitMarket(marketId);
-  const update = {
-    [market.id]: {
-      ...market,
-      contracts: market.contracts.map(({ id }) => `${id}`),
-    },
-  };
-
-  return markets.set(update).then(() => update[market.id]);
-};
-
-export const fetchContractsFromPredictit = async (marketId) => {
-  const market = await fetchPredictitMarket(marketId);
-  const update = market.contracts
-    .map(remapKeys)
-    .map((contract) => ({ ...contract, id: `${contract.id}` }))
-    .map((contract) => ({ ...contract, market: `${marketId}` }))
-    .map((contract, index) => ({ ...contract, displayOrder: index }))
-    .map((contract) => {
-      delete contract.dateEnd;
-      delete contract.status;
-      delete contract.buyNo;
-      delete contract.buyYes;
-      delete contract.lastClose;
-      delete contract.lastTrade;
-      delete contract.sellNo;
-      delete contract.sellYes;
-      return contract;
-    })
-    .reduce((data, contract) => ({ ...data, [contract.id]: contract }), {});
-
-  return contracts.set(update).then(() => update);
-};
-
-export const fetchPricesFromPredictit = async (marketId) => {
-  const market = await fetchPredictitMarket(marketId);
-  const update = market.contracts
-    .map(remapKeys)
-    .map((contract) => ({ ...contract, id: `${contract.id}` }))
-    .map((contract) => ({ ...contract, market: `${marketId}` }))
-    .map((contract) => {
-      delete contract.dateEnd;
-      delete contract.status;
-      delete contract.displayOrder;
-      delete contract.image;
-      delete contract.name;
-      delete contract.shortName;
-      return contract;
-    })
-    .reduce((data, contract) => ({ ...data, [contract.id]: contract }), {});
-
-  return prices.set(update).then(() => update);
-};
-
 export const fetchMarketFromFirebase = (marketId) => {
   return getMarketRef(marketId)
     .once('value')

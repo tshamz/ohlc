@@ -1,8 +1,6 @@
 import * as messages from '@shared/messages';
+import { active } from '@shared/storage';
 import { contractsRef } from '@shared/firebase';
-import { markets, active, contracts } from '@shared/storage';
-
-import { fetchContractsFromPredictit as fetchContracts } from '@shared/fetch';
 
 const updateActiveContracts = (snapshot) => {
   return active.set({
@@ -23,23 +21,6 @@ const onMarketEnter = async ([{ marketId }]) => {
     .equalTo(marketId)
     .on('child_changed', updateActiveContracts);
 };
-
-// const onMarketEnter = async ([{ marketId }]) => {
-//   const contractIds = await markets
-//     .get(marketId)
-//     .then((result) => result[marketId]?.contracts);
-
-//   const getContracts = contractIds
-//     ? contracts.get(contractIds)
-//     : fetchContracts(marketId);
-
-//   await getContracts.then((contracts) => active.set({ contracts }));
-
-//   return contractsRef
-//     .orderByChild('market')
-//     .equalTo(marketId)
-//     .on('child_changed', updateActiveContracts);
-// };
 
 const onMarketExit = async () => {
   await active.remove('contracts');
