@@ -2,6 +2,8 @@
 
 2. distance to max payout from current gain
   e.g. $300 max with $150 gain
+  
+
 
 I = {
   TotalSharesTraded: "totalSharesTraded"

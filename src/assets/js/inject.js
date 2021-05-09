@@ -3,6 +3,15 @@
     const enteringMarket = current && current.includes('markets/detail');
     const exitingMarket = previous && previous.includes('markets/detail');
 
+    // if (exitingMarket && enteringMarket) {
+    //   const exit = previous.replace(/.*\/detail\/(\d\d\d\d\d?)\/?.*/, '$1');
+    //   const enter = current.replace(/.*\/detail\/(\d\d\d\d\d?)\/?.*/, '$1');
+    //   const event = new CustomEvent('market.update', {
+    //     detail: { exit, enter },
+    //   });
+    //   window.dispatchEvent(event);
+    // }
+
     if (exitingMarket) {
       const id = previous.replace(/.*\/detail\/(\d\d\d\d\d?)\/?.*/, '$1');
       const event = new CustomEvent('market.exit', { detail: id });

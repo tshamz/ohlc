@@ -13,6 +13,7 @@ var alias = {
   'react-dom': '@hot-loader/react-dom',
   '@components': path.resolve(__dirname, 'src/components/'),
   '@shared': path.resolve(__dirname, 'src/shared/'),
+  '@pages': path.resolve(__dirname, 'src/pages/'),
 };
 
 // load the secrets

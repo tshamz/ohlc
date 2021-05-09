@@ -1,79 +1,86 @@
 import React from 'react';
-import { render } from 'react-dom';
+import ReactDOM from 'react-dom';
+
+import * as log from '@shared/log';
+import * as storage from '@shared/storage';
 
 import { App } from '@components/App';
 
-import { $ } from '@shared/utils';
-import { fetchMarketData } from '@shared/fetch';
+const observers = {};
 
-const containsClass = (nodes) => (classNames) => {
-  const nodeHasAllClassNames = (node) => {
-    return [classNames]
-      .flat()
-      .every((className) => node.classList.contains(className));
-  };
-
-  return nodes.some(nodeHasAllClassNames);
+const $ = {
+  get appRoot() {
+    return document.querySelector(`.app-layout-old__content`);
+  },
+  get ohlcAppRoot() {
+    return document.getElementById('ohlc-app-root');
+  },
+  get marketDetail() {
+    return document.querySelector('.market-detail');
+  },
+  get contractRows() {
+    return document.querySelectorAll(`[data-contract-id]`);
+  },
+  get showMoreToggle() {
+    return document.querySelector(
+      `.market-detail__contracts-toggle-more:not(.market-detail__contracts-toggle-more--active)`
+    );
+  },
 };
 
-const getNodes = (mutations) => (type) => {
-  const nodes = mutations
-    .map((mutation) => Array.from(mutation[type]))
+const containsClassOrAttribute = (classNameOrAttribute) => (nodes) => {
+  return nodes.some(
+    (node) =>
+      node.hasAttribute(classNameOrAttribute) ||
+      node.classList.contains(classNameOrAttribute)
+  );
+};
+
+const getAddedNodes = (mutations) => {
+  return mutations
+    .map((mutation) => Array.from(mutation.addedNodes))
     .flat()
     .filter((node) => node.nodeType === 1);
-
-  nodes.contains = containsClass(nodes);
-
-  return nodes;
 };
 
-export const watchForMarketReady = () => {
+const getRemovedNodes = (mutations) => {
+  return mutations
+    .map((mutation) => Array.from(mutation.removedNodes))
+    .flat()
+    .filter((node) => node.nodeType === 1);
+};
+
+export const watchForAddedOrRemovedNodes = async (id) => {
+  const observer = new MutationObserver((mutations) => {
+    const addedNodes = getAddedNodes(mutations);
+    const hasContractRow = containsClassOrAttribute('data-contract-id');
+
+    if (hasContractRow(addedNodes)) {
+      renderComponents();
+    }
+  });
+
+  observer.observe($.marketDetail, { childList: true, subtree: true });
+  observers[id] = observer;
+};
+
+export const waitForUIUpdate = (id) => {
   return new Promise((resolve) => {
-    const handler = async (mutations, observer) => {
-      if ($.contracts.length > 0) {
+    const observer = new MutationObserver((mutations, observer) => {
+      if ($.contractRows.length > 0) {
         $.showMoreToggle && $.showMoreToggle.click();
         observer.disconnect();
-        resolve();
+        resolve($.contractRows);
       }
-    };
+    });
 
-    const contractsObserver = new MutationObserver(handler);
-
-    contractsObserver.observe($.appRoot, { subtree: true, childList: true });
+    observer.observe($.appRoot, { subtree: true, childList: true });
+    observers[id] = observer;
   });
 };
 
-export const watchForAddedOrRemovedNodes = async () => {
-  const handler = (mutations) => {
-    const nodes = getNodes(mutations);
-    const addedNodes = nodes('addedNodes');
-    const removedNodes = nodes('removedNodes');
-
-    if (addedNodes.contains('market-contract-horizontal-v2')) {
-      mountApp();
-    }
-
-    if (addedNodes.contains('market-payout--market')) {
-      window.dispatchEvent(new CustomEvent('payoutNode.added'));
-    }
-  };
-
-  if (!$.marketDetail) {
-    setTimeout(watchForAddedOrRemovedNodes, 5000);
-  } else {
-    const observer = new MutationObserver(handler);
-
-    observer.observe($.marketDetail, { childList: true, subtree: true });
-  }
-};
-
-export const mountApp = async () => {
-  const path = window.location.pathname;
-  const id = path.match(/detail\/(?<id>\d\d\d\d\d?)/)?.groups.id;
-
-  if (!id) return;
-
-  // const data = await fetchMarketData(id);
+export const renderComponents = (initial = {}) => {
+  log.event.lifecycle('before.mount')(initial);
 
   if (!$.ohlcAppRoot) {
     const appEntry = document.createElement('div');
@@ -81,5 +88,15 @@ export const mountApp = async () => {
     document.body.appendChild(appEntry);
   }
 
-  render(<App />, $.ohlcAppRoot);
+  ReactDOM.render(<App {...initial} />, $.ohlcAppRoot);
+};
+
+export const unmountComponents = async (id) => {
+  log.event.lifecycle('before.unmount')({ id });
+
+  await storage.observers
+    .get(({ [id]: observer }) => observer || {})
+    .then((observer) => observer.disconnect && observer.disconnect());
+
+  ReactDOM.unmountComponentAtNode($.ohlcAppRoot);
 };

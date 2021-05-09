@@ -1,8 +1,42 @@
+.market-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * Market Headers
+ */
+.market-header-title-large {
+  order: -1;
+}
+
+.market-payout--market,
+.market-detail__payout-header {
+  order: 0;
+}
+
+.market-detail__contracts-header,
+.row-x {
+  order: 1;
+}
+
 .market-detail__payout-header {
   display: flex;
   padding-left: 0 !important;
   padding-right: 0 !important;
   justify-content: space-between;
+}
+
+.market-detail__payout-header ~ .market-detail__payout-header.ohlc,
+.market-payout ~ .market-payout.ohlc {
+  display: none;
+}
+
+.market-detail__payout-header > *,
+.market-payout--market > * {
+  flex-basis: 25%;
+  text-align: center;
+  margin: 0 !important;
 }
 
 .market-detail__payout-header::after {
@@ -13,26 +47,9 @@
   text-align: center;
 }
 
-.market-detail__payout-header > *,
-.market-payout--market > * {
-  flex-basis: 25%;
-  text-align: center;
-  margin: 0 !important;
-}
-
-.market-header-title-large,
-.market-detail__payout-header,
-.market-payout--market,
 .market-detail__payout-header-col-1,
-.market-detail__payout-header-col-1-1,
-.market-payout__col-1,
-.market-payout__col-1-1 {
+.market-payout__col-1 {
   order: -1;
-}
-
-.market-detail__payout-header ~ .market-detail__payout-header.ohlc,
-.market-payout ~ .market-payout.ohlc {
-  display: none;
 }
 
 .market-payout--market::after {
@@ -45,13 +62,12 @@
   font-weight: 300;
 }
 
-.market-detail {
-  display: flex;
-  flex-direction: column;
-}
-
+/**
+* OHLC
+*/
 .ohlc-container-root {
   height: 100px;
+  width: 140px;
   padding-top: 10px;
   padding-bottom: 10px;
   font-size: 12px;
@@ -61,18 +77,7 @@
   display: flex;
 }
 
-.ohlc-timespan-container {
-  height: 80px;
-  width: 105px;
-}
-
-.toggle,
-.datapoint-name,
-.datapoint-value {
-  line-height: 1;
-}
-
-.timespan-toggles {
+.ohlc-timespan-toggles {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -81,15 +86,7 @@
   margin-right: 4px;
 }
 
-.is-active--1h .is-1h-toggle,
-.is-active--24h .is-24h-toggle,
-.is-active--7d .is-7d-toggle,
-.is-active--30d .is-30d-toggle,
-.is-active--90d .is-90d-toggle {
-  font-weight: 900;
-}
-
-.timespan-toggle {
+.ohlc-timespan-toggle {
   outline: none;
   cursor: pointer;
   font-weight: 400;
@@ -98,23 +95,16 @@
   text-align: right;
 }
 
-.timespan-toggle.is-disabled--true {
-  cursor: auto;
-  opacity: 0.3;
-  text-decoration: line-through;
+.ohlc-timespan-toggle.active {
+  font-weight: 900;
 }
 
-.timespan-toggle.active::before {
-  content: '•';
-  margin-right: 3px;
-  font-size: 16px;
-  position: absolute;
-  left: -4px;
-  line-height: 1;
-  top: -1px;
+.ohlc-timespan-container {
+  height: 80px;
+  width: 105px;
 }
 
-.timespan {
+.ohlc-timespan {
   display: none;
   height: 80px;
   width: 105px;
@@ -122,55 +112,27 @@
   justify-content: space-between;
 }
 
-.is-active--1h .is-1h,
-.is-active--24h .is-24h,
-.is-active--7d .is-7d,
-.is-active--30d .is-30d,
-.is-active--90d .is-90d {
+.ohlc-timespan.active {
   display: flex;
 }
 
-.datapoint {
+.ohlc-datapoint {
   display: flex;
 }
 
-.datapoint-name {
-  width: 50%;
+.ohlc-datapoint-name,
+.ohlc-datapoint-value {
+  line-height: 1;
 }
 
-.datapoint-values {
-  width: 50%;
+.ohlc-datapoint-value {
+  flex: 1;
   text-align: right;
   font-weight: 600;
   position: relative;
 }
 
-.datapoint-value {
-  display: none;
-}
-
-.datapoint-values.is-active--value .is-value,
-.datapoint-values.is-active--distance .is-distance {
-  display: block;
-}
-
-/* .distance {
-  position: absolute;
-  left: 100%;
-  margin-left: 5px;
-  font-size: 9px;
-  top: 2px;
-} */
-
-/* .distance.positive {
-  color: #47a447;
-} */
-
-/* .distance.negative {
-  color: #d9534f;
-} */
-
-/*
+/**
  * Overrides
  */
 @media screen and (min-width: 64em) {
@@ -183,6 +145,31 @@
   .market-detail .market-contract-horizontal-v2__content {
     width: calc(100% - 100px) !important;
   }
+  .market-detail .market-detail__contracts-header {
+    padding-left: 110px !important;
+    padding-right: 25px !important;
+  }
+  .market-detail__contracts-header-col-1,
+  .market-detail__contracts-header-col-2,
+  .market-detail__contracts-header-col-3,
+  .market-detail__contracts-header-col-4 {
+    margin: 0 !important;
+  }
+  .market-detail__contracts-header-col-1 {
+    flex-basis: 25%;
+  }
+  .market-detail__contracts-header-col-2 {
+    flex-basis: 18%;
+    margin-right: 70px !important;
+  }
+  .market-detail__contracts-header-col-3 {
+    flex: 1;
+    margin-left: 70px !important;
+  }
+  .market-detail__contracts-header-col-4 {
+    flex: 1;
+    text-align: right;
+  }
   .market-detail .market-contract-horizontal-v2__row {
     display: flex !important;
     align-items: center !important;
@@ -190,21 +177,11 @@
   .market-detail .market-contract-horizontal-v2__row > *:first-child {
     order: -1;
   }
-  .market-detail .market-contract-horizontal-v2__row > *:nth-child(2) {
-    order: 1;
-  }
   .market-detail .market-contract-horizontal-v2__row > *:last-child {
     order: 0;
   }
-  .market-detail .market-detail__contracts-header {
-    padding-left: 110px !important;
-    padding-right: 25px !important;
-  }
-  .market-detail .market-detail__contracts-header-col-2 {
-    margin-left: 185px !important;
-  }
-  .market-detail .market-detail__contracts-header-col-3 {
-    margin-left: 215px !important;
+  .market-detail .market-contract-horizontal-v2__row > *:nth-child(2) {
+    order: 1;
   }
 }
 
@@ -271,7 +248,6 @@
 /**
  * B1, B2, B3, etc.
  */
-
 body {
   counter-reset: count;
 }

@@ -1,35 +1,25 @@
-import * as messages from '@shared/messages';
-import { active } from '@shared/storage';
-import { contractsRef } from '@shared/firebase';
+import * as storage from '@shared/storage';
+import * as firebase from '@shared/firebase';
 
-const updateActiveContracts = (snapshot) => {
-  return active.set({
-    contracts: snapshot.val(),
-  });
-};
+import { CACHE_CONTRACTS } from '@shared/const';
 
-const onMarketEnter = async ([{ marketId }]) => {
-  contractsRef
-    .orderByChild('market')
-    .equalTo(marketId)
-    .once('value')
-    .then((snapshot) => snapshot.val())
-    .then((contracts) => active.set({ contracts }));
+(async () => {
+  try {
+    // const periodInMinutes = 1;
+    // const delayInMinutes = 60;
+    const delayInMinutes = 0;
+    const periodInMinutes = 60 * 4;
 
-  contractsRef
-    .orderByChild('market')
-    .equalTo(marketId)
-    .on('child_changed', updateActiveContracts);
-};
+    chrome.alarms.create(CACHE_CONTRACTS, { delayInMinutes, periodInMinutes });
 
-const onMarketExit = async () => {
-  await active.remove('contracts');
-  contractsRef.off('child_changed', updateActiveContracts);
-};
-
-try {
-  messages.marketEnterStream.subscribe(onMarketEnter);
-  messages.marketExitStream.subscribe(onMarketExit);
-} catch (error) {
-  console.error('error', error);
-}
+    chrome.alarms.onAlarm.addListener(async (alarm) => {
+      if (alarm.name === CACHE_CONTRACTS) {
+        const contracts = await firebase.contracts.get();
+        await storage.contracts.clear();
+        await storage.contracts.set(contracts);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+})();

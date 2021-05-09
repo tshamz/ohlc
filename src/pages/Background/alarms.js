@@ -1,41 +1,35 @@
-import { markets, contracts } from '@shared/storage';
-import { marketsRef, contractsRef } from '@shared/firebase';
-import {
-  MARKETS_UPDATE_INTERVAL,
-  CONTRACTS_UPDATED_INTERVAL,
-} from '@shared/constants';
+// import * as storage from '@shared/storage';
+// import * as firebase from '@shared/firebase';
 
-try {
-  const interval = 12; // hours
-  const logStyles = `font-weight:bold;font-style:italic;`;
-  const alarmOptions = { delayInMinutes: 60, periodInMinutes: 60 * interval };
-  const alarmMap = {
-    [MARKETS_UPDATE_INTERVAL]: { ref: marketsRef, bucket: markets },
-    [CONTRACTS_UPDATED_INTERVAL]: { ref: contractsRef, bucket: contracts },
-  };
+// try {
+//   // const periodInMinutes = 1;
+//   // const delayInMinutes = 0;
+//   const delayInMinutes = 60;
+//   const periodInMinutes = 60 * 4;
 
-  chrome.alarms.create(MARKETS_UPDATE_INTERVAL, alarmOptions);
-  chrome.alarms.create(CONTRACTS_UPDATED_INTERVAL, alarmOptions);
+//   const cacheData = (bucket) => async (data) => {
+//     await bucket.clear();
+//     await bucket.set(data);
+//   };
 
-  chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (!(alarm.name in alarmMap)) return;
+//   const cacheMarkets = cacheData(storage.markets);
+//   const cacheContracts = cacheData(storage.contracts);
 
-    const { ref, bucket } = alarmMap[alarm.name];
-    const snapshot = await ref.once('value');
-    const count = snapshot.numChildren();
-    const data = snapshot.val();
-    await bucket.clear();
-    await bucket.set(data);
+//   chrome.alarms.create('data.cache', { delayInMinutes, periodInMinutes });
 
-    console.log(`%cAdded ${count} nodes from ${snapshot.key}.`, logStyles);
-  });
-} catch (error) {
-  console.error('error', error);
-}
+//   chrome.alarms.onAlarm.addListener((alarm) => {
+//     if (alarm.name === 'data.cache') {
+//       firebase.markets.get().then(cacheMarkets);
+//       firebase.contracts.get().then(cacheContracts);
+//     }
+//   });
+// } catch (error) {
+//   console.error(error);
+// }
 
-// const OPEN = 5;
-// const CLOSE = 23;
-// const timeZone = 'America/Los_Angeles';
-// const isActive = now > OPEN && now < CLOSE;
-// const timeOptions = { timeZone, hour12: false, hour: 'numeric' };
-// const now = new Date().toLocaleTimeString('en-US', timeOptions);
+// // const OPEN = 5;
+// // const CLOSE = 23;
+// // const timeZone = 'America/Los_Angeles';
+// // const isActive = now > OPEN && now < CLOSE;
+// // const timeOptions = { timeZone, hour12: false, hour: 'numeric' };
+// // const now = new Date().toLocaleTimeString('en-US', timeOptions);

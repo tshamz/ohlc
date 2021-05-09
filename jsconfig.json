@@ -18,7 +18,8 @@
       "*": ["*"],
       "src/*": ["src/*"],
       "@shared/*": ["src/shared/*"],
-      "@components/*": ["src/components/*"]
+      "@components/*": ["src/components/*"],
+      "@pages/*": ["src/pages/*"]
     }
   },
   "include": ["src/**/*"],

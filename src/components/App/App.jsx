@@ -1,101 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { map, skip, filter } from 'rxjs/operators';
+import { Portal } from 'react-portal';
 
-import { Portal } from '@components/Portal';
 import { PayoutHeader } from '@components/PayoutHeader';
-import { useTotalPrice } from '@components/useTotalPrice';
 import { OpenHighLowClose } from '@components/OpenHighLowClose';
 
-import { $ } from '@shared/utils';
-// import * as storage from '@shared/storage';
+import * as log from '@shared/log';
+import * as storage from '@shared/storage';
 
-export const App = (props) => {
-  const [state, setState] = useState(props);
-  const [allActiveTimespans, setAllActiveTimespans] = useState('24h');
+const getTargetNode = (id) => {
+  const selector = `[data-contract-id="${id}"] .market-contract-horizontal-v2__row`;
+  return document.querySelector(selector);
+};
 
-  useTotalPrice(state.prices);
+export const App = (initial) => {
+  const [market, setMarket] = useState(initial.market);
+  const [prices, setPrices] = useState(initial.prices);
+  const [timespans, setTimespans] = useState(initial.timespans);
+  const [globalActiveTimespans, setGlobalActiveTimespans] = useState('1h');
 
   useEffect(() => {
-    if (!state.market) return;
+    log.event.lifecycle('mount')({ component: 'App' });
 
-    const id = state.market.id;
+    const marketSubscription = storage.active.changeStream
+      .pipe(filter(({ market }) => market))
+      .pipe(map(({ market }) => market.newValue))
+      .subscribe(setMarket);
 
-    // const marketsRef = storage.markets.changes.subscribe((changes) => {
-    //   if (!changes[id]) return;
+    const pricesSubscription = storage.active.changeStream
+      .pipe(filter(({ prices }) => prices))
+      .pipe(map(({ prices }) => prices.newValue))
+      .subscribe(setPrices);
 
-    //   const { contracts, prices, ...market } = changes[id].newValue;
-
-    //   setState({
-    //     ...state,
-    //     contracts,
-    //     prices,
-    //     market: { ...state.market, ...market },
-    //   });
-    // });
-
-    // const positionsRef = storage.positions.changes.subscribe((changes) => {
-    //   if (!changes[id]) return;
-    //   setState({ ...state, positions: changes[id].newValue.contracts });
-    // });
-
-    // prettier-ignore
-    // const pricesRef = storage.prices.changes.subscribe((changes) => {
-    //   const contractIds = Object.keys(state.contracts);
-    //   const activeChanges = contractIds
-    //     .reduce((updates, id) => ({ ...updates, ...changes[id]?.newValue }), {})
-    //   if (!Object.keys(activeChanges).length) return;
-    //   setState({ ...state, prices: { ...state.prices, ...activeChanges } });
-    // });
-
-    // const timespansRef = storage.timespans.changes.subscribe((changes) => {
-    //   if (!changes[id]) return;
-    //   setState({ ...state, timespans: changes[id].newValue.contracts });
-    // });
+    const timespansSubscription = storage.timespans.valueStream
+      .pipe(skip(1))
+      .subscribe(setTimespans);
 
     return () => {
-      // marketsRef.unsubscribe();
-      // positionsRef.unsubscribe();
-      // pricesRef.unsubscribe();
-      // timespansRef.unsubscribe();
+      log.event.lifecycle('unmount')({ component: 'App' });
+
+      marketSubscription.unsubscribe();
+      pricesSubscription.unsubscribe();
+      timespansSubscription.unsubscribe();
     };
-  }, [state]);
+  }, []);
 
-  useEffect(() => {
-    setState(props);
-  }, [props]);
-
-  const ready =
-    !!state.market &&
-    !!state.contracts &&
-    !!state.positions &&
-    !!state.timespans &&
-    !!state.prices;
-
-  if (!ready) return null;
+  if (!market?.contracts) return null;
 
   return (
     <>
-      <PayoutHeader market={state.market} />
+      <Portal node={document.querySelector('.market-detail')}>
+        <PayoutHeader prices={prices} />
+      </Portal>
 
-      {Object.values(state.contracts)
-        .sort((a, b) => a.displayOrder - b.displayOrder)
-        .map((contract, index) => {
-          return (
-            <Portal
-              key={index}
-              id={contract.id}
-              classes={['ohlc-container-root']}
-              parent={$.contractRows.item(contract.displayOrder || index)}
-            >
-              <OpenHighLowClose
-                prices={state.prices[contract.id]}
-                timespans={state.timespans[contract.id]}
-                totalSharesTraded={state.market.totalSharesTraded}
-                allActiveTimespans={allActiveTimespans}
-                setAllActiveTimespans={setAllActiveTimespans}
-              />
-            </Portal>
-          );
-        })}
+      {market.contracts.map((contractId) => {
+        return (
+          <Portal key={contractId} node={getTargetNode(contractId)}>
+            <OpenHighLowClose
+              contractId={contractId}
+              prices={prices[contractId]}
+              timespans={timespans[contractId]}
+              totalSharesTraded={market.totalSharesTraded}
+              globalActiveTimespans={globalActiveTimespans}
+              setGlobalActiveTimespans={setGlobalActiveTimespans}
+            />
+          </Portal>
+        );
+      })}
     </>
   );
 };
+
+App.displayName = App;

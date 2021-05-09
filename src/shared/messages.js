@@ -1,14 +1,14 @@
 import { getMessage } from '@extend-chrome/messages';
 
 export const [
-  marketEnterSend,
+  sendMarketEnter,
   marketEnterStream,
-  marketEnterReady,
-] = getMessage('MARKET_ENTER');
+  waitForMarketEnter,
+] = getMessage('market.enter', { async: true });
 
 // prettier-ignore
 export const [
-  marketExitSend,
+  sendMarketExit,
   marketExitStream,
-  marketExitReady,
-] = getMessage('MARKET_EXIT');
+  waitForMarketExit,
+] = getMessage('market.exit');

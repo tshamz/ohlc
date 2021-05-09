@@ -1,27 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { Portal } from '@components/Portal';
+export const PayoutHeader = ({ prices }) => {
+  useEffect(() => {
+    if (!prices) return;
 
-export const PayoutHeader = ({ market }) => {
+    const total = Object.values(prices)
+      .map((prices) => prices?.buyYes || prices?.lastTrade || 0)
+      .reduce((total, price) => total + price, 0)
+      .toFixed(2);
+
+    document
+      .querySelector('.market-payout--market')
+      .setAttribute('data-total-price', total);
+  }, [prices]);
+
   return (
     <>
-      <Portal
-        id={`payout-header-${market.id}-root`}
-        classes={['market-detail__payout-header', 'ohlc']}
-        parent={document.querySelector('.market-detail')}
-      >
+      <div className="market-detail__payout-header ohlc">
         <div className="market-detail__payout-header-col-1">
           Market Investment
         </div>
         <div className="market-detail__payout-header-col-2">Gain/Loss</div>
         <div className="market-detail__payout-header-col-3">Max. Payout</div>
-      </Portal>
+      </div>
 
-      <Portal
-        id={`market-payout-${market.id}-root`}
-        classes={['market-payout', 'market-payout--market', 'ohlc']}
-        parent={document.querySelector('.market-detail')}
-      >
+      <div className="market-payout market-payout--market ohlc">
         <div className="market-payout__col-1">
           <div className="market-payout__price">$0</div>
         </div>
@@ -37,7 +40,7 @@ export const PayoutHeader = ({ market }) => {
             <span className="market-payout__payout-link-raw">$0</span>
           </div>
         </div>
-      </Portal>
+      </div>
     </>
   );
 };

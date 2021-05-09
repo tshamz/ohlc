@@ -1,148 +1,101 @@
 import React, { useEffect, useState } from 'react';
-import { debounce } from 'lodash';
 
-import { TIMESPANS } from '@shared/constants';
-import {
-  calculatePriceDistance,
-  calculateVolumeDistance,
-} from '@shared/prices';
+import * as log from '@shared/log';
+
+const sortTimespans = ([a], [b]) => {
+  const order = ['1h', '24h', '7d', '30d', '90d'];
+  return order.indexOf(a) - order.indexOf(b);
+};
+
+const round = (value, precision) => {
+  const multiplier = Math.pow(10, precision || 0);
+  return Math.round(value * multiplier) / multiplier;
+};
 
 export const OpenHighLowClose = ({
   prices,
   timespans,
-  totalSharesTraded,
-  allActiveTimespans,
-  setAllActiveTimespans,
+  globalActiveTimespans,
+  setGlobalActiveTimespans,
 }) => {
-  const [allActiveValue, setAllActiveValue] = useState('value');
-  const [activeTimespan, setActiveTimespan] = useState(allActiveTimespans);
-  const [debounceClickEvents, setDebounceClickEvents] = useState([]);
+  const [activeTimespan, setActiveTimespan] = useState(globalActiveTimespans);
 
   useEffect(() => {
-    setActiveTimespan(allActiveTimespans);
-  }, [allActiveTimespans]);
+    log.event.lifecycle('mount')({ component: 'OHLC' });
 
-  const onDoubleClicked = (timespan) => (event) => {
-    event.stopPropagation();
-    if (debounceClickEvents.length > 0) {
-      debounceClickEvents.forEach((debounce) => debounce.cancel());
-      setDebounceClickEvents([]);
-    }
-    setAllActiveTimespans(timespan);
-  };
-
-  const onClicked = (timespan) => (event) => {
-    event.stopPropagation();
-    const callback = debounce(() => {
-      setDebounceClickEvents([]);
-
-      if (!(timespan in timespans)) return;
-
-      if (timespan !== activeTimespan) {
-        setActiveTimespan(timespan);
-        return;
-      }
-
-      if (allActiveValue === 'value') {
-        setAllActiveValue('distance');
-      } else {
-        setAllActiveValue('value');
-      }
-    }, 150);
-    setDebounceClickEvents([...debounceClickEvents, callback]);
-    callback();
-  };
-
-  return (
-    <div className={`ohlc-container is-active--${activeTimespan}`}>
-      <div data-toggles className="timespan-toggles">
-        {TIMESPANS.map((label) => {
-          return (
-            <button
-              key={label}
-              data-toggle={label}
-              // prettier-ignore
-              className={`timespan-toggle is-${label}-toggle is-disabled--${!timespans[label]}`}
-              onClick={onClicked(label)}
-              onDoubleClick={onDoubleClicked(label)}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="ohlc-timespan-container">
-        {Object.entries(timespans).map(([timespan, datapoints]) => {
-          return (
-            <div
-              key={timespan}
-              data-timespans={timespan}
-              className={`timespan is-${timespan}`}
-            >
-              {Object.entries(datapoints).map(([name, { value, label }]) => (
-                <OpenHighLowCloseValue
-                  key={name}
-                  name={name}
-                  label={label}
-                  value={value}
-                  prices={prices}
-                  allActiveValue={allActiveValue}
-                  totalSharesTraded={totalSharesTraded}
-                />
-              ))}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-export const OpenHighLowCloseValue = ({
-  name,
-  label,
-  value,
-  prices,
-  allActiveValue,
-  totalSharesTraded,
-}) => {
-  const [activeValue, setActiveValue] = useState(allActiveValue);
+    return () => {
+      log.event.lifecycle('unmount')({ component: 'OHLC' });
+    };
+  }, []);
 
   useEffect(() => {
-    setActiveValue(allActiveValue);
-  }, [allActiveValue]);
+    setActiveTimespan(globalActiveTimespans);
+  }, [globalActiveTimespans]);
 
-  const distance =
-    name === 'volume'
-      ? calculateVolumeDistance(value, totalSharesTraded)
-      : calculatePriceDistance(value, prices);
+  if (!timespans) return null;
+
+  const sortedTimespanEntries = Object.entries(timespans).sort(sortTimespans);
 
   return (
-    <div key={name} className="datapoint" data-datapoint={name}>
-      <div className="datapoint-name">{`${name}: `}</div>
-      <div className={`datapoint-values is-active--${activeValue}`}>
-        <div
-          data-value="raw"
-          className={`datapoint-value is-value`}
-          onClick={(event) => {
-            event.stopPropagation();
-            setActiveValue('distance');
-          }}
-        >
-          {label || '-'}
+    <div className="ohlc-container-root">
+      <div className="ohlc-container">
+        <div data-toggles className="ohlc-timespan-toggles">
+          {sortedTimespanEntries.map(([timespan]) => {
+            const isActive = timespan === activeTimespan ? 'active' : '';
+
+            return (
+              <button
+                key={timespan}
+                timespan={timespan}
+                data-toggle={timespan}
+                className={`ohlc-timespan-toggle ${isActive}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (timespan === activeTimespan) {
+                    setGlobalActiveTimespans(timespan);
+                  } else {
+                    setActiveTimespan(timespan);
+                  }
+                }}
+              >
+                {timespan}
+              </button>
+            );
+          })}
         </div>
 
-        <div
-          data-value="distance"
-          className={`datapoint-value is-distance`}
-          onClick={(event) => {
-            event.stopPropagation();
-            setActiveValue('value');
-          }}
-        >
-          {distance?.direction}
-          {distance?.label}
+        <div className="ohlc-timespan-container">
+          {sortedTimespanEntries.map(([timespan, datapoints]) => {
+            const isActive = timespan === activeTimespan ? 'active' : '';
+
+            return (
+              <div
+                key={timespan}
+                timespan={timespan}
+                data-timespans={timespan}
+                className={`ohlc-timespan ${isActive}`}
+              >
+                {Object.entries(datapoints).map(([name, value]) => {
+                  return (
+                    <div
+                      key={name}
+                      timespan={name}
+                      className="ohlc-datapoint"
+                      data-datapoint={name}
+                    >
+                      <div className="ohlc-datapoint-name">{`${name}: `}</div>
+
+                      <div className="ohlc-datapoint-value" data-value="raw">
+                        {name === 'volume'
+                          ? (value / 1000).toFixed(3) + `K`
+                          : round(value * 100, 2).toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
