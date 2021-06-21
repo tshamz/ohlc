@@ -22,6 +22,7 @@
     {
       "resources": [
         "inject.js",
+        "loader.js",
         "contentScript.bundle.js",
         "contentScript.bundle.js.map",
         "content.styles.css",
@@ -43,11 +44,16 @@
     "idle",
     "notifications",
     "scripting",
+    "activeTab",
     "webNavigation"
   ],
   "content_security_policy": {
     "script-src": "self",
     "object-src": "self"
   },
-  "host_permissions": ["https://*.predictit.org/*", "wss://*.predictit.org/*"]
+  "host_permissions": [
+    "https://www.gstatic.com/*",
+    "https://*.predictit.org/*",
+    "wss://*.predictit.org/*"
+  ]
 }

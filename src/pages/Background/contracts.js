@@ -1,24 +1,20 @@
 import * as storage from '@shared/storage';
-import * as firebase from '@shared/firebase';
 
 import { CACHE_CONTRACTS } from '@shared/const';
 
 (async () => {
   try {
     // const periodInMinutes = 1;
-    // const delayInMinutes = 60;
-    const delayInMinutes = 0;
+    // const delayInMinutes = 0;
+    const delayInMinutes = 60;
     const periodInMinutes = 60 * 4;
+    const alarmOptions = { delayInMinutes, periodInMinutes };
 
-    chrome.alarms.create(CACHE_CONTRACTS, { delayInMinutes, periodInMinutes });
+    const onAlarm = async (alarm) =>
+      alarm.name === CACHE_CONTRACTS && storage.cacheContracts();
 
-    chrome.alarms.onAlarm.addListener(async (alarm) => {
-      if (alarm.name === CACHE_CONTRACTS) {
-        const contracts = await firebase.contracts.get();
-        await storage.contracts.clear();
-        await storage.contracts.set(contracts);
-      }
-    });
+    chrome.alarms.create(CACHE_CONTRACTS, alarmOptions);
+    chrome.alarms.onAlarm.addListener(onAlarm);
   } catch (error) {
     console.error(error);
   }

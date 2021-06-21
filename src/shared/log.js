@@ -5,6 +5,7 @@ import * as CONST from '@shared/const';
 const {
   parse,
   bright,
+  italic,
   bgBlack,
   bgLightBlue,
   bgLightGray,
@@ -41,6 +42,7 @@ const colors = {
 
   [CONST.CONTRACTS_GET]: bgLightRed,
 
+  [CONST.TIMESPANS_GET]: bgLightRed,
   [CONST.TIMESPANS_SUBSCRIBE]: bgLightRed,
   [CONST.TIMESPANS_UNSUBSCRIBE]: bgLightGreen,
 };
@@ -49,7 +51,7 @@ const color = (value) => colors[value] || colors.default;
 const style = (value) => color(value).white(` ${value} `);
 const pad = (value, size) => ' '.repeat(Math.max(0, size - value.length));
 
-const logEvent = (type) => (event) => async (data = {}) => {
+const logEvent = (type) => async (event, data = {}) => {
   const timestamp = new Date().toLocaleString().padEnd(25);
   const typeValue = `Type: ${style(type)} ${pad(type, 10)}`;
   const eventValue = `Event: ${style(event)} ${pad(event, 20)}`;
@@ -60,12 +62,21 @@ const logEvent = (type) => (event) => async (data = {}) => {
   return data;
 };
 
-export const event = {
-  init: logEvent('init'),
-  firebase: logEvent('firebase'),
-  lifecycle: logEvent('lifecycle'),
-  navigation: logEvent('navigation'),
+const logBackoff = (database, remainingSeconds) => {
+  const name = bright.white.bgBlack(` ${database} `);
+  const body = italic(`data fetched recently, returning cache.`);
+  const timeLeft = `(${remainingSeconds} seconds remaining)`;
+  const message = parse(`🚨 ${name} ${body} ${timeLeft}`);
+
+  console.log(...message.asChromeConsoleLogArguments);
 };
+
+export const event = logEvent('init');
+export const firebase = logEvent('firebase');
+export const lifecycle = logEvent('lifecycle');
+export const navigation = logEvent('navigation');
+
+export const backoff = logBackoff;
 
 // export const log = ololog
 //   .configure({

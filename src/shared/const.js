@@ -11,6 +11,7 @@ export const MARKET_PRICES_UNSUBSCRIBE = 'market.prices.unsubscribe';
 export const CONTRACTS_GET = 'contracts.get';
 
 // timespans
+export const TIMESPANS_GET = 'timespans.get';
 export const TIMESPANS_SUBSCRIBE = 'timespans.subscribe';
 export const TIMESPANS_UNSUBSCRIBE = 'timespans.unsubscribe';
 
@@ -21,6 +22,8 @@ export const START_EXTENSION = 'start.extension';
 
 // lifecycle
 export const BEFORE_MOUNT = 'before.mount';
+export const MOUNT = 'mount';
+export const UNMOUNT = 'unmount';
 export const BEFORE_UNMOUNT = 'before.unmount';
 
 // market
@@ -32,7 +35,7 @@ export const MARKET_EXIT = 'market.exit';
 export const CACHE_MARKETS = 'cache.markets';
 export const CACHE_CONTRACTS = 'cache.contracts';
 
-export const ONE_MINUE = 1000 * 60;
+export const ONE_MINUTE = 1000 * 60;
 export const ONE_HOUR = 1000 * 60 * 60;
 export const ONE_DAY = 1000 * 60 * 60 * 24;
 export const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;

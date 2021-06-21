@@ -1,24 +1,22 @@
+import * as log from '@shared/log';
 import * as storage from '@shared/storage';
 import * as firebase from '@shared/firebase';
 
-// import { TIMESPANS_SUBSCRIBE } from '@shared/const';
-
 (async () => {
   try {
-    const onValue = (snapshot) => storage.timespans.set(snapshot.val());
+    const cache = await storage.getCacheStatus('timespans');
 
-    firebase.timespans.subscribe(onValue);
+    const onTimespanUpdate = async (snapshot) => {
+      const data = await snapshot.val();
 
-    // const delayInMinutes = 0;
-    // const periodInMinutes = 60;
+      storage.timespans.set(data);
+    };
 
-    // chrome.alarms.create(TIMESPANS_SUBSCRIBE, alarmOptions);
-
-    // chrome.alarms.onAlarm.addListener(async (alarm) => {
-    //   if (alarm.name === TIMESPANS_SUBSCRIBE) {
-
-    //   }
-    // });
+    if (cache.expired) {
+      firebase.subscribeToTimespanUpdates(onTimespanUpdate);
+    } else {
+      log.backoff('timespans', cache.remainingSeconds);
+    }
   } catch (error) {
     console.error(error);
   }

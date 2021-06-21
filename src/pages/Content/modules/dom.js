@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom';
 import * as log from '@shared/log';
 import * as storage from '@shared/storage';
 
+import { BEFORE_MOUNT, BEFORE_UNMOUNT } from '@shared/const';
+
 import { App } from '@components/App';
 
 const observers = {};
@@ -80,7 +82,7 @@ export const waitForUIUpdate = (id) => {
 };
 
 export const renderComponents = (initial = {}) => {
-  log.event.lifecycle('before.mount')(initial);
+  log.lifecycle(BEFORE_MOUNT, initial);
 
   if (!$.ohlcAppRoot) {
     const appEntry = document.createElement('div');
@@ -92,7 +94,7 @@ export const renderComponents = (initial = {}) => {
 };
 
 export const unmountComponents = async (id) => {
-  log.event.lifecycle('before.unmount')({ id });
+  log.lifecycle(BEFORE_UNMOUNT, { id });
 
   await storage.observers
     .get(({ [id]: observer }) => observer || {})

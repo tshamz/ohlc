@@ -64,12 +64,6 @@ var options = {
           {
             loader: 'css-loader',
           },
-          {
-            loader: 'sass-loader',
-            options: {
-              sourceMap: true,
-            },
-          },
         ],
       },
       {
@@ -167,6 +161,11 @@ var options = {
       patterns: [
         {
           from: 'src/assets/js/inject.js',
+          to: path.join(__dirname, 'build'),
+          force: true,
+        },
+        {
+          from: 'src/assets/js/loader.js',
           to: path.join(__dirname, 'build'),
           force: true,
         },

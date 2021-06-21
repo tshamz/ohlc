@@ -2,10 +2,22 @@ import React, { useEffect, useState } from 'react';
 
 import * as log from '@shared/log';
 
-const sortTimespans = ([a], [b]) => {
-  const order = ['1h', '24h', '7d', '30d', '90d'];
-  return order.indexOf(a) - order.indexOf(b);
-};
+import { MOUNT, UNMOUNT } from '@shared/const';
+
+const TIMESPANS = ['1h', '24h', '7d', '30d', '90d'];
+const DATAPOINTS = ['open', 'high', 'low', 'close', 'volume'];
+const ROW_HEIGHT = `${(1 / TIMESPANS.length) * 100}%`;
+
+const sortValues = (order) => ([a], [b]) => order.indexOf(a) - order.indexOf(b);
+const sortTimespans = sortValues(TIMESPANS);
+const sortDatapoints = sortValues(DATAPOINTS);
+
+const prepareDatapoints = ([name, value]) => [
+  name,
+  name === 'volume'
+    ? (value / 1000).toFixed(3) + `K`
+    : round(value * 100, 2).toFixed(2),
+];
 
 const round = (value, precision) => {
   const multiplier = Math.pow(10, precision || 0);
@@ -21,10 +33,10 @@ export const OpenHighLowClose = ({
   const [activeTimespan, setActiveTimespan] = useState(globalActiveTimespans);
 
   useEffect(() => {
-    log.event.lifecycle('mount')({ component: 'OHLC' });
+    log.lifecycle(MOUNT, { component: 'OHLC' });
 
     return () => {
-      log.event.lifecycle('unmount')({ component: 'OHLC' });
+      log.lifecycle(UNMOUNT, { component: 'OHLC' });
     };
   }, []);
 
@@ -34,21 +46,49 @@ export const OpenHighLowClose = ({
 
   if (!timespans) return null;
 
-  const sortedTimespanEntries = Object.entries(timespans).sort(sortTimespans);
+  // const data = Object.entries(timespans)
+  //   .sort(sortTimespans)
+  //   .map(([timespan, datapoints]) => {
+  //     const { open, high, low, close } = datapoints;
+
+  //     return [
+  //       timespan,
+  //       round(open * 100000) / 100000,
+  //       round(high * 100000) / 100000,
+  //       round(low * 100000) / 100000,
+  //       round(close * 100000) / 100000,
+  //     ];
+  //   });
 
   return (
-    <div className="ohlc-container-root">
-      <div className="ohlc-container">
-        <div data-toggles className="ohlc-timespan-toggles">
-          {sortedTimespanEntries.map(([timespan]) => {
-            const isActive = timespan === activeTimespan ? 'active' : '';
-
+    <div css={{ display: 'flex', height: '100%' }}>
+      <div
+        data-toggles
+        css={{
+          display: 'flex',
+          marginRight: '4px',
+          flexDirection: 'column',
+          borderRight: '1px solid',
+        }}
+      >
+        {Object.entries(timespans)
+          .sort(sortTimespans)
+          .map(([timespan]) => {
             return (
               <button
                 key={timespan}
                 timespan={timespan}
                 data-toggle={timespan}
-                className={`ohlc-timespan-toggle ${isActive}`}
+                css={{
+                  lineHeight: 1,
+                  outline: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'right',
+                  paddingLeft: '4px',
+                  paddingRight: '4px',
+                  height: ROW_HEIGHT,
+                  fontWeight: timespan === activeTimespan ? 900 : 400,
+                }}
                 onClick={(event) => {
                   event.stopPropagation();
                   if (timespan === activeTimespan) {
@@ -62,41 +102,57 @@ export const OpenHighLowClose = ({
               </button>
             );
           })}
-        </div>
+      </div>
 
-        <div className="ohlc-timespan-container">
-          {sortedTimespanEntries.map(([timespan, datapoints]) => {
-            const isActive = timespan === activeTimespan ? 'active' : '';
-
+      <div>
+        {Object.entries(timespans)
+          .sort(sortTimespans)
+          .map(([timespan, datapoints]) => {
             return (
               <div
                 key={timespan}
                 timespan={timespan}
                 data-timespans={timespan}
-                className={`ohlc-timespan ${isActive}`}
+                css={{
+                  width: '105px',
+                  height: '100%',
+                  flexDirection: 'column',
+                  display: timespan === activeTimespan ? 'flex' : 'none',
+                }}
               >
-                {Object.entries(datapoints).map(([name, value]) => {
-                  return (
-                    <div
-                      key={name}
-                      timespan={name}
-                      className="ohlc-datapoint"
-                      data-datapoint={name}
-                    >
-                      <div className="ohlc-datapoint-name">{`${name}: `}</div>
+                {Object.entries(datapoints)
+                  .sort(sortDatapoints)
+                  .map(prepareDatapoints)
+                  .map(([name, value]) => {
+                    return (
+                      <div
+                        key={name}
+                        timespan={name}
+                        data-datapoint={name}
+                        css={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          height: ROW_HEIGHT,
+                        }}
+                      >
+                        <div>{`${name}: `}</div>
 
-                      <div className="ohlc-datapoint-value" data-value="raw">
-                        {name === 'volume'
-                          ? (value / 1000).toFixed(3) + `K`
-                          : round(value * 100, 2).toFixed(2)}
+                        <div
+                          data-value="raw"
+                          css={{
+                            flex: 1,
+                            fontWeight: 600,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {value}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             );
           })}
-        </div>
       </div>
     </div>
   );

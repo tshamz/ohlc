@@ -1,10 +1,24 @@
+import min from 'lodash/min';
+
+import * as log from '@shared/log';
+
 import { storage, getBucket } from '@extend-chrome/storage';
+
+import * as firebase from '@shared/firebase';
+
+import {
+  ONE_HOUR,
+  ONE_MINUTE,
+  MARKET_GET,
+  MARKET_CONTRACTS_GET,
+  MARKET_PRICES_GET,
+} from '@shared/const';
 
 export const sync = storage.sync;
 export const local = storage.local;
 
+export const cache = getBucket('cache');
 export const active = getBucket('active');
-export const lastRan = getBucket('lastRan');
 export const observers = getBucket('observers');
 export const subscriptions = getBucket('subscriptions');
 
@@ -14,30 +28,116 @@ export const prices = getBucket('prices');
 export const timespans = getBucket('timespans');
 export const watchlist = getBucket('watchlist');
 
-export const getMarket = async (id) => {
-  return markets.get(({ [id]: market }) => market);
+export const getKeys = (event, ids) => {
+  return [ids].flat().map((id) => `${event}.${id}`);
 };
 
-export const setLastRan = (id, expires = Infinity) => async (data) => {
-  await lastRan.set({
-    [id]: { timestamp: Date.now(), expires: Date.now() + expires },
-  });
+export const setCache = (keys, expiresIn = 0) => {
+  const expiresAt = Date.now() + expiresIn;
+  const pairs = [keys].flat().map((key) => [key, expiresAt]);
 
+  return cache.set(Object.fromEntries(pairs));
+};
+
+export const getCacheStatus = async (keys) => {
+  const expires = Object.values(await cache.get(keys));
+  const missing = expires.length === 0;
+  const expired = missing || expires.some((value) => !(Date.now() < value));
+  const remainingSeconds = min(expires.map((x) => (x - Date.now()) / 100)) || 0;
+
+  return { expired, remainingSeconds };
+};
+
+export const getMarket = async (id) => {
+  try {
+    const key = getKeys(MARKET_GET, id);
+    const cache = await getCacheStatus(key);
+
+    if (cache.expired) {
+      await firebase
+        .getMarket(id)
+        .then((market) => ({ [id]: market }))
+        .then((market) => markets.set(market))
+        .then(() => setCache(key, ONE_HOUR * 4));
+    } else {
+      log.backoff('market', cache.remainingSeconds);
+    }
+
+    return markets.get((markets) => markets[id]);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const getMarketContracts = async (market) => {
+  try {
+    const keys = getKeys(MARKET_CONTRACTS_GET, market.contracts);
+    const cache = await getCacheStatus(keys);
+
+    if (cache.expired) {
+      await firebase
+        .getMarketContracts(market.id)
+        .then(contracts.set)
+        .then(() => setCache(keys, ONE_HOUR * 4));
+    } else {
+      log.backoff('market.contracts', cache.remainingSeconds);
+    }
+
+    return contracts.get(market.contracts);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const getMarketPrices = async (market) => {
+  const keys = getKeys(MARKET_PRICES_GET, market.contracts);
+  const cache = await getCacheStatus(keys);
+
+  if (cache.expired) {
+    await firebase
+      .getMarketPrices(market.id)
+      .then(prices.set)
+      .then(() => setCache(keys, ONE_MINUTE * 10));
+  } else {
+    log.backoff('market.prices', cache.remainingSeconds);
+  }
+
+  return prices.get(market.contracts);
+};
+
+export const getMarketTimespans = async (market) => {
+  const cache = await getCacheStatus('timespans');
+
+  if (cache.expired) {
+    await cacheTimespans();
+
+    setCache('timespans', ONE_HOUR);
+  } else {
+    log.backoff('timespans', cache.remainingSeconds);
+  }
+
+  return timespans.get(market.contracts);
+};
+
+export const cacheMarkets = async () => {
+  const data = await firebase.getMarkets();
+  await markets.clear();
+  await markets.set(data);
   return data;
 };
 
-export const getLastRan = async (id) => {
-  const result = await lastRan.get(({ [id]: lastRan }) => lastRan);
+export const cacheContracts = async () => {
+  const data = await firebase.getContracts();
+  await contracts.clear();
+  await contracts.set(data);
+  return data;
+};
 
-  if (!result) return {};
-
-  const expires = result.expires;
-  const remaining = expires - Date.now();
-  const remainingSeconds = remaining / 1000;
-  const expired = Date.now() > expires;
-  const fresh = !expired;
-
-  return { expires, remaining, remainingSeconds, expired, fresh };
+export const cacheTimespans = async () => {
+  const data = await firebase.getTimespans();
+  await timespans.clear();
+  await timespans.set(data);
+  return data;
 };
 
 // import diffler from 'diffler';
@@ -59,7 +159,7 @@ export const getLastRan = async (id) => {
 // const logChange = (labelText, color = 'red') => (changes) => {};
 
 // active.changeStream.subscribe(logChange('Active'));
-// lastRan.changeStream.subscribe(logChange('from firebase'));
+// cache.changeStream.subscribe(logChange('from firebase'));
 
 // markets.changeStream.subscribe(logChange('markets', 'green'));
 // contracts.changeStream.subscribe(logChange('contracts', 'yellow'));
